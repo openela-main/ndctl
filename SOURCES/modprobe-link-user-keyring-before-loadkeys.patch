@@ -1,0 +1,6 @@
+diff -up ndctl-67/contrib/nvdimm-security.conf.orig ndctl-67/contrib/nvdimm-security.conf
+--- ndctl-67/contrib/nvdimm-security.conf.orig	2019-11-01 13:21:04.669374133 -0400
++++ ndctl-67/contrib/nvdimm-security.conf	2019-11-01 13:21:04.669374133 -0400
+@@ -1 +1 @@
+-install libnvdimm /usr/bin/ndctl load-keys ; /sbin/modprobe --ignore-install libnvdimm $CMDLINE_OPTS
++install libnvdimm keyctl link @u @s; /usr/bin/ndctl load-keys; /sbin/modprobe --ignore-install libnvdimm $CMDLINE_OPTS
