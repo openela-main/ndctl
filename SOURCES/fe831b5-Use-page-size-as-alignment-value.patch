@@ -1,0 +1,124 @@
+Use page size as alignment value
+
+BZ: 
+Brew: 
+
+commit fe831b526b88f6ca7a27fdb149b8a7d2ecddbc55
+Author: Santosh Sivaraj <santosh@fossix.org>
+Date:   Thu May 13 11:42:18 2021 +0530
+
+    Use page size as alignment value
+    
+    The alignment sizes passed to ndctl in the tests are all hardcoded to 4k,
+    the default page size on x86. Change those to the default page size on that
+    architecture (sysconf/getconf). No functional changes otherwise.
+    
+    Link: https://lore.kernel.org/r/20210513061218.760322-4-santosh@fossix.org
+    Signed-off-by: Santosh Sivaraj <santosh@fossix.org>
+    Signed-off-by: Vishal Verma <vishal.l.verma@intel.com>
+
+diff -up ndctl-71.1/test/dpa-alloc.c.orig ndctl-71.1/test/dpa-alloc.c
+--- ndctl-71.1/test/dpa-alloc.c.orig	2020-12-22 16:44:57.000000000 -0500
++++ ndctl-71.1/test/dpa-alloc.c	2022-06-06 17:13:12.045108349 -0400
+@@ -38,12 +38,13 @@ static int do_test(struct ndctl_ctx *ctx
+ 	struct ndctl_region *region, *blk_region = NULL;
+ 	struct ndctl_namespace *ndns;
+ 	struct ndctl_dimm *dimm;
+-	unsigned long size;
++	unsigned long size, page_size;
+ 	struct ndctl_bus *bus;
+ 	char uuid_str[40];
+ 	int round;
+ 	int rc;
+ 
++	page_size = sysconf(_SC_PAGESIZE);
+ 	/* disable nfit_test.1, not used in this test */
+ 	bus = ndctl_bus_get_by_provider(ctx, NFIT_PROVIDER1);
+ 	if (!bus)
+@@ -124,11 +125,11 @@ static int do_test(struct ndctl_ctx *ctx
+ 			return rc;
+ 		}
+ 		ndctl_namespace_disable_invalidate(ndns);
+-		rc = ndctl_namespace_set_size(ndns, SZ_4K);
++		rc = ndctl_namespace_set_size(ndns, page_size);
+ 		if (rc) {
+-			fprintf(stderr, "failed to init %s to size: %d\n",
++			fprintf(stderr, "failed to init %s to size: %lu\n",
+ 					ndctl_namespace_get_devname(ndns),
+-					SZ_4K);
++					page_size);
+ 			return rc;
+ 		}
+ 		namespaces[i].ndns = ndns;
+@@ -150,7 +151,7 @@ static int do_test(struct ndctl_ctx *ctx
+ 		ndns = namespaces[i % ARRAY_SIZE(namespaces)].ndns;
+ 		if (i % ARRAY_SIZE(namespaces) == 0)
+ 			round++;
+-		size = SZ_4K * round;
++		size = page_size * round;
+ 		rc = ndctl_namespace_set_size(ndns, size);
+ 		if (rc) {
+ 			fprintf(stderr, "%s: set_size: %lx failed: %d\n",
+@@ -166,7 +167,7 @@ static int do_test(struct ndctl_ctx *ctx
+ 	i--;
+ 	round++;
+ 	ndns = namespaces[i % ARRAY_SIZE(namespaces)].ndns;
+-	size = SZ_4K * round;
++	size = page_size * round;
+ 	rc = ndctl_namespace_set_size(ndns, size);
+ 	if (rc) {
+ 		fprintf(stderr, "%s failed to update while labels full\n",
+@@ -175,7 +176,7 @@ static int do_test(struct ndctl_ctx *ctx
+ 	}
+ 
+ 	round--;
+-	size = SZ_4K * round;
++	size = page_size * round;
+ 	rc = ndctl_namespace_set_size(ndns, size);
+ 	if (rc) {
+ 		fprintf(stderr, "%s failed to reduce size while labels full\n",
+diff -up ndctl-71.1/test/multi-dax.sh.orig ndctl-71.1/test/multi-dax.sh
+--- ndctl-71.1/test/multi-dax.sh.orig	2020-12-22 16:44:57.000000000 -0500
++++ ndctl-71.1/test/multi-dax.sh	2022-06-06 17:13:12.046108353 -0400
+@@ -12,6 +12,8 @@ check_min_kver "4.13" || do_skip "may la
+ 
+ trap 'err $LINENO' ERR
+ 
++ALIGN_SIZE=`getconf PAGESIZE`
++
+ # setup (reset nfit_test dimms)
+ modprobe nfit_test
+ $NDCTL disable-region -b $NFIT_TEST_BUS0 all
+@@ -22,9 +24,9 @@ rc=1
+ query=". | sort_by(.available_size) | reverse | .[0].dev"
+ region=$($NDCTL list -b $NFIT_TEST_BUS0 -t pmem -Ri | jq -r "$query")
+ 
+-json=$($NDCTL create-namespace -b $NFIT_TEST_BUS0 -r $region -t pmem -m devdax -a 4096 -s 16M)
++json=$($NDCTL create-namespace -b $NFIT_TEST_BUS0 -r $region -t pmem -m devdax -a $ALIGN_SIZE -s 16M)
+ chardev1=$(echo $json | jq ". | select(.mode == \"devdax\") | .daxregion.devices[0].chardev")
+-json=$($NDCTL create-namespace -b $NFIT_TEST_BUS0 -r $region -t pmem -m devdax -a 4096 -s 16M)
++json=$($NDCTL create-namespace -b $NFIT_TEST_BUS0 -r $region -t pmem -m devdax -a $ALIGN_SIZE -s 16M)
+ chardev2=$(echo $json | jq ". | select(.mode == \"devdax\") | .daxregion.devices[0].chardev")
+ 
+ _cleanup
+diff -up ndctl-71.1/test/sector-mode.sh.orig ndctl-71.1/test/sector-mode.sh
+--- ndctl-71.1/test/sector-mode.sh.orig	2020-12-22 16:44:57.000000000 -0500
++++ ndctl-71.1/test/sector-mode.sh	2022-06-06 17:13:12.046108353 -0400
+@@ -9,6 +9,8 @@ rc=77
+ set -e
+ trap 'err $LINENO' ERR
+ 
++ALIGN_SIZE=`getconf PAGESIZE`
++
+ # setup (reset nfit_test dimms)
+ modprobe nfit_test
+ $NDCTL disable-region -b $NFIT_TEST_BUS0 all
+@@ -25,7 +27,7 @@ NAMESPACE=$($NDCTL list -b $NFIT_TEST_BU
+ REGION=$($NDCTL list -R --namespace=$NAMESPACE | jq -r "(.[]) | .dev")
+ echo 0 > /sys/bus/nd/devices/$REGION/read_only
+ $NDCTL create-namespace --no-autolabel -e $NAMESPACE -m sector -f -l 4K
+-$NDCTL create-namespace --no-autolabel -e $NAMESPACE -m dax -f -a 4K
++$NDCTL create-namespace --no-autolabel -e $NAMESPACE -m dax -f -a $ALIGN_SIZE
+ $NDCTL create-namespace --no-autolabel -e $NAMESPACE -m sector -f -l 4K
+ 
+ _cleanup
