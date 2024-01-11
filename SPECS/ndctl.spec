@@ -1,6 +1,6 @@
 Name:		ndctl
 Version:	71.1
-Release:	4%{?dist}
+Release:	7%{?dist}
 Summary:	Manage "libnvdimm" subsystem devices (Non-volatile Memory)
 License:	GPLv2
 Group:		System Environment/Base
@@ -22,6 +22,16 @@ Patch11:	aa99000-libndctl-papr-Add-support-for-reporting-shutdown-count.patch
 Patch12:	edcd9b7-libndctl-intel-Indicate-supported-smart-inject-types.patch
 Patch13:	9ef460e-libndctl-papr-Add-limited-support-for-inject-smart.patch
 Patch14:	6e85cac-ndtest-ack-shutdown-count-Skip-the-test-on-ndtest.patch
+Patch15:	7ce2fdd-ndctl-test-add-checking-the-presence-of-jq-command-ahead.patch
+Patch16:	43e48c0-test-libndctl-Use-ndctl_region_set_ro-to-change-disk-read-only-state.patch
+Patch17:	1649ad9-test-Don-t-skip-tests-if-nfit-modules-are-missing.patch
+Patch18:	e423b46-ndctl-test-Prepare-for-BLK-aperture-support-removal.patch
+Patch19:	6538529-ndctl-test-Move-reset-to-function-in-common.patch
+Patch20:	fe37c85-ndctl-test-Initialize-the-label-area-by-default.patch
+Patch21:	756a659-ndctl-test-Skip-BLK-flags-checks.patch
+Patch22:	b787320-ndctl-test-Move-sector-mode-to-a-different-region.patch
+Patch23:	2e05cd6-ndctl-Deprecate-BLK-aperture-support.patch
+Patch24:	4921c0c-ndctl-test-make-inject-smart.sh-more-tolerant-of-decimal-fields.patch
 
 Requires:	ndctl-libs%{?_isa} = %{version}-%{release}
 Requires:	daxctl-libs%{?_isa} = %{version}-%{release}
@@ -169,6 +179,18 @@ make check
 
 
 %changelog
+* Mon Jun 05 2023 Jeff Moyer <jmoyer@redhat.com> - 71.1-7.el8
+- Another bump to fix gating tests
+- Resolves: rhbz#2141031
+
+* Mon Jun 05 2023 Jeff Moyer <jmoyer@redhat.com> - 71.1-6.el8
+- Bump release for a rebuild
+- Resolves: rhbz#2141031
+
+* Fri Jun 02 2023 Jeff Moyer <jmoyer@redhat.com> - 71.1-5.el8
+- Sync test harness with kernel updates. (Jeff Moyer)
+- Resolves: rhbz#2141031
+
 * Tue Jun 14 2022 Jeff Moyer <jmoyer@redhat.com> - 71.1-4.el8
 - Pull in fixes from upstream v72 and v73 (Jeff Moyer)
   - Fix enable-namespace all reporting errors incorrectly
