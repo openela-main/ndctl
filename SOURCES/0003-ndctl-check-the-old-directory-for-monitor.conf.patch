@@ -1,0 +1,70 @@
+ndctl: check the old directory for monitor.conf
+
+Scripts may still reference / install the monitor.conf file
+in the old path.  Check there first to avoid breaking backwards
+compatibility.
+
+Signed-off-by: Jeff Moyer <jmoyer@redhat.com>
+
+Related: RHEL-10382
+diff --git a/config.h.meson b/config.h.meson
+index 5441dff..32e7941 100644
+--- a/config.h.meson
++++ b/config.h.meson
+@@ -149,6 +149,7 @@
+ /* Locations to install configuration files, key config, man pages, etc.. */
+ #mesondefine NDCTL_CONF_FILE
+ #mesondefine NDCTL_CONF_DIR
++#mesondefine LEGACY_CONF_FILE
+ #mesondefine DAXCTL_CONF_DIR
+ #mesondefine NDCTL_KEYS_DIR
+ #mesondefine NDCTL_MAN_PATH
+diff --git a/meson.build b/meson.build
+index 2cb188f..96bc386 100644
+--- a/meson.build
++++ b/meson.build
+@@ -259,8 +259,11 @@ conf.set10('HAVE_JSON_U64',
+ 
+ ndctlconf_dir = sysconfdir / 'ndctl.conf.d'
+ ndctlconf = ndctlconf_dir / 'monitor.conf'
++legacyconf_dir = sysconfdir / 'ndctl'
++legacyconf = legacyconf_dir / 'monitor.conf'
+ conf.set_quoted('NDCTL_CONF_FILE', ndctlconf)
+ conf.set_quoted('NDCTL_CONF_DIR', ndctlconf_dir)
++conf.set_quoted('LEGACY_CONF_FILE', legacyconf)
+ 
+ ndctlkeys_dir = sysconfdir / 'ndctl' / 'keys'
+ conf.set_quoted('NDCTL_KEYS_DIR', ndctlkeys_dir)
+diff --git a/ndctl/meson.build b/ndctl/meson.build
+index 050d576..dd13a41 100644
+--- a/ndctl/meson.build
++++ b/ndctl/meson.build
+@@ -59,7 +59,7 @@ endif
+ if get_option('systemd').enabled()
+   install_data('ndctl-monitor.service', install_dir : systemdunitdir)
+ endif
+-install_data('monitor.conf', install_dir : ndctlconf_dir)
++install_data('monitor.conf', install_dir : legacyconf_dir)
+ install_data('ndctl.conf', install_dir : ndctlconf_dir)
+ install_data('keys.readme', install_dir : ndctlkeys_dir)
+ 
+diff --git a/ndctl/monitor.c b/ndctl/monitor.c
+index bd8a748..07da7f5 100644
+--- a/ndctl/monitor.c
++++ b/ndctl/monitor.c
+@@ -591,6 +591,15 @@ int cmd_monitor(int argc, const char **argv, struct ndctl_ctx *ctx)
+ 	else
+ 		monitor.ctx.log_priority = LOG_INFO;
+ 
++	/*
++	 * First, check the legacy path to see if a monitor.conf
++	 * file exists there.  If so, add a [monitor] header
++	 * and use its contents.
++	 */
++	if (!monitor.configs && (stat(LEGACY_CONF_FILE, &st) == 0) &&
++	    S_ISREG(st.st_mode))
++		monitor.configs = LEGACY_CONF_FILE;
++
+ 	ndctl_configs = ndctl_get_config_path(ctx);
+ 	if (!monitor.configs && ndctl_configs) {
+ 		rc = asprintf(&path, "%s/monitor.conf", ndctl_configs);
