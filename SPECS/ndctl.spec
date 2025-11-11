@@ -1,10 +1,11 @@
 Name:		ndctl
 Version:	80
-Release:	3%{?dist}
+Release:	4%{?dist}
 Summary:	Manage "libnvdimm" subsystem devices (Non-volatile Memory)
 License:	GPL-2.0-only and LGPL-2.1-only and CC0-1.0 and MIT
 Url:		https://github.com/pmem/ndctl
 Source0:	https://github.com/pmem/%{name}/archive/v%{version}.tar.gz#/%{name}-%{version}.tar.gz
+Patch0:		def79df-ndctl-list-display-region-caps-for-any-of-BTT-PFN-DAX.patch
 
 Requires:	ndctl-libs%{?_isa} = %{version}-%{release}
 Requires:	daxctl-libs%{?_isa} = %{version}-%{release}
@@ -126,7 +127,7 @@ libcxl is a library for enumerating and communicating with CXL devices.
 
 
 %prep
-%setup -q ndctl-%{version}
+%autosetup -p1 ndctl-%{version}
 
 %build
 %meson %{?asciidoctor} %{?libtracefs} -Dversion-tag=%{version}
@@ -243,6 +244,11 @@ fi
 
 
 %changelog
+* Tue Jul 22 2025 Jeff Moyer <jmoyer@redhat.com> - 80-4
+- Fix listing of region capabilities (Jeff Moyer)
+- Remove orphaned patch file (Jeff Moyer)
+- Resolves: RHEL-80436
+
 * Tue Oct 29 2024 Troy Dawson <tdawson@redhat.com> - 80-3
 - Bump release for October 2024 mass rebuild:
   Resolves: RHEL-64018
