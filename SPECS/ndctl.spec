@@ -1,13 +1,13 @@
 Name:		ndctl
-Version:	78
-Release:	2%{?dist}
+Version:	82
+Release:	1%{?dist}
 Summary:	Manage "libnvdimm" subsystem devices (Non-volatile Memory)
 License:	GPLv2
 Url:		https://github.com/pmem/ndctl
 Source0:	https://github.com/pmem/%{name}/archive/v%{version}.tar.gz#/%{name}-%{version}.tar.gz
-Patch0:		0001-test-daxctl-devices.sh-increase-the-namespace-size.patch
 Patch1:		0002-ndctl-vendor-iniparser.patch
 Patch2:		0003-ndctl-check-the-old-directory-for-monitor.conf.patch
+Patch3:		30aca93-test-dax.sh-adjust-trace-parsing-of-fault-results.patch
 
 Requires:	ndctl-libs%{?_isa} = %{version}-%{release}
 Requires:	daxctl-libs%{?_isa} = %{version}-%{release}
@@ -210,6 +210,10 @@ libcxl is a library for enumerating and communicating with CXL devices.
 
 
 %changelog
+* Wed Aug 27 2025 Jeff Moyer <jmoyer@redhat.com> - 82-1
+- Rebase to v82
+- Resolve: RHEL-97669
+
 * Fri Jul 26 2024 Jeff Moyer <jmoyer@redhat.com> - 78-2
 - Add explicit package version requirements. (Jeff Moyer)
 - Related: RHEL-29151

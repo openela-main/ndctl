@@ -10,27 +10,10 @@ project that wishes to use it, so that's what this patch does.
 Signed-off-by: Jeff Moyer <jmoyer@redhat.com>
 
 Related: RHEL-10382
----
- LICENSES/other/iniparser-MIT |  21 +
- meson.build                  |  20 +-
- meson_options.txt            |   2 -
- util/dictionary.c            | 380 ++++++++++++++++
- util/dictionary.h            | 173 ++++++++
- util/iniparser.c             | 836 +++++++++++++++++++++++++++++++++++
- util/iniparser.h             | 358 +++++++++++++++
- util/meson.build             |   3 +-
- 8 files changed, 1771 insertions(+), 22 deletions(-)
- create mode 100644 LICENSES/other/iniparser-MIT
- create mode 100644 util/dictionary.c
- create mode 100644 util/dictionary.h
- create mode 100644 util/iniparser.c
- create mode 100644 util/iniparser.h
 
-diff --git a/LICENSES/other/iniparser-MIT b/LICENSES/other/iniparser-MIT
-new file mode 100644
-index 0000000..5a3a80b
---- /dev/null
-+++ b/LICENSES/other/iniparser-MIT
+diff -up ndctl-82/LICENSES/other/iniparser-MIT.orig ndctl-82/LICENSES/other/iniparser-MIT
+--- ndctl-82/LICENSES/other/iniparser-MIT.orig	2025-08-27 11:03:40.040540977 -0400
++++ ndctl-82/LICENSES/other/iniparser-MIT	2025-08-27 11:03:40.040521648 -0400
 @@ -0,0 +1,21 @@
 +Copyright (c) 2000-2011 by Nicolas Devillard.
 +MIT License
@@ -53,10 +36,9 @@ index 0000000..5a3a80b
 +FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 +DEALINGS IN THE SOFTWARE.
 +
-diff --git a/meson.build b/meson.build
-index ef001f8..2cb188f 100644
---- a/meson.build
-+++ b/meson.build
+diff -up ndctl-82/meson.build.orig ndctl-82/meson.build
+--- ndctl-82/meson.build.orig	2025-06-11 20:12:07.000000000 -0400
++++ ndctl-82/meson.build	2025-08-27 11:03:40.040695614 -0400
 @@ -5,6 +5,7 @@ project('ndctl', 'c',
      'LGPL-2.1',
      'CC0-1.0',
@@ -91,11 +73,10 @@ index ef001f8..2cb188f 100644
  conf = configuration_data()
  check_headers = [
    ['HAVE_DLFCN_H', 'dlfcn.h'],
-diff --git a/meson_options.txt b/meson_options.txt
-index 5c41b1a..2209eab 100644
---- a/meson_options.txt
-+++ b/meson_options.txt
-@@ -24,7 +24,5 @@ option('pkgconfiglibdir', type : 'string', value : '',
+diff -up ndctl-82/meson_options.txt.orig ndctl-82/meson_options.txt
+--- ndctl-82/meson_options.txt.orig	2025-06-11 20:12:07.000000000 -0400
++++ ndctl-82/meson_options.txt	2025-08-27 11:03:40.040793793 -0400
+@@ -24,8 +24,6 @@ option('pkgconfiglibdir', type : 'string
         description : 'directory for standard pkg-config files')
  option('bashcompletiondir', type : 'string',
         description : '''${datadir}/bash-completion/completions''')
@@ -103,11 +84,10 @@ index 5c41b1a..2209eab 100644
 -       description : 'Path containing the iniparser header files')
  option('modprobedatadir', type : 'string',
         description : '''${sysconfdir}/modprobe.d/''')
-diff --git a/util/dictionary.c b/util/dictionary.c
-new file mode 100644
-index 0000000..aa3d232
---- /dev/null
-+++ b/util/dictionary.c
+ option('fwctl', type : 'feature', value : 'enabled',
+diff -up ndctl-82/util/dictionary.c.orig ndctl-82/util/dictionary.c
+--- ndctl-82/util/dictionary.c.orig	2025-08-27 11:03:40.040910751 -0400
++++ ndctl-82/util/dictionary.c	2025-08-27 11:03:40.040890551 -0400
 @@ -0,0 +1,380 @@
 +/*-------------------------------------------------------------------------*/
 +/**
@@ -489,11 +469,9 @@ index 0000000..aa3d232
 +    }
 +    return ;
 +}
-diff --git a/util/dictionary.h b/util/dictionary.h
-new file mode 100644
-index 0000000..f0fd540
---- /dev/null
-+++ b/util/dictionary.h
+diff -up ndctl-82/util/dictionary.h.orig ndctl-82/util/dictionary.h
+--- ndctl-82/util/dictionary.h.orig	2025-08-27 11:03:40.041006380 -0400
++++ ndctl-82/util/dictionary.h	2025-08-27 11:03:40.040993950 -0400
 @@ -0,0 +1,173 @@
 +
 +/*-------------------------------------------------------------------------*/
@@ -668,11 +646,9 @@ index 0000000..f0fd540
 +#endif
 +
 +#endif
-diff --git a/util/iniparser.c b/util/iniparser.c
-new file mode 100644
-index 0000000..dbceb20
---- /dev/null
-+++ b/util/iniparser.c
+diff -up ndctl-82/util/iniparser.c.orig ndctl-82/util/iniparser.c
+--- ndctl-82/util/iniparser.c.orig	2025-08-27 11:03:40.041195706 -0400
++++ ndctl-82/util/iniparser.c	2025-08-27 11:03:40.041164137 -0400
 @@ -0,0 +1,836 @@
 +
 +/*-------------------------------------------------------------------------*/
@@ -1510,11 +1486,9 @@ index 0000000..dbceb20
 +{
 +    dictionary_del(d);
 +}
-diff --git a/util/iniparser.h b/util/iniparser.h
-new file mode 100644
-index 0000000..37ff7b7
---- /dev/null
-+++ b/util/iniparser.h
+diff -up ndctl-82/util/iniparser.h.orig ndctl-82/util/iniparser.h
+--- ndctl-82/util/iniparser.h.orig	2025-08-27 11:03:40.041324024 -0400
++++ ndctl-82/util/iniparser.h	2025-08-27 11:03:40.041304934 -0400
 @@ -0,0 +1,358 @@
 +
 +/*-------------------------------------------------------------------------*/
@@ -1874,10 +1848,9 @@ index 0000000..37ff7b7
 +#endif
 +
 +#endif
-diff --git a/util/meson.build b/util/meson.build
-index a6ded7e..97b27b5 100644
---- a/util/meson.build
-+++ b/util/meson.build
+diff -up ndctl-82/util/meson.build.orig ndctl-82/util/meson.build
+--- ndctl-82/util/meson.build.orig	2025-06-11 20:12:07.000000000 -0400
++++ ndctl-82/util/meson.build	2025-08-27 11:03:40.041394234 -0400
 @@ -12,8 +12,9 @@ util = static_library('util', [
    'bitmap.c',
    'abspath.c',
@@ -1889,6 +1862,3 @@ index a6ded7e..97b27b5 100644
    include_directories : root_inc,
  )
  util_dep = declare_dependency(link_with : util)
--- 
-2.39.3
-

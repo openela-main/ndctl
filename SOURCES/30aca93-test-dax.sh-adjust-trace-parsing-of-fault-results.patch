@@ -1,0 +1,42 @@
+test/dax.sh: adjust trace parsing of fault results
+
+JIRA: https://issues.redhat.com/browse/RHEL-98531
+
+commit 30aca9314e91f385c85dfc1866f0da282dbba1cd
+Author: Dan Williams <dan.j.williams@intel.com>
+Date:   Wed Jun 18 15:21:28 2025 -0700
+
+    test/dax.sh: adjust trace parsing of fault results
+    
+    With current kernel+tracecmd combinations stdout is no longer purely
+    trace records and column "21" is no longer the vmfault_t result.
+    
+    Drop, if present, the diagnostic print of how many CPUs are in the trace
+    and use the more universally compatible assumption that the fault result
+    is the last column rather than a specific column.
+    
+    Note that dax.sh is not a unit test on its own, but rather is included in
+    both dax-xfs.h and dax-ext4.sh.
+    
+    [ as: only feed trace lines with dax_pmd_fault_done to awk ]
+    
+    Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+    Reviewed-by: Dave Jiang <dave.jiang@intel.com>
+    Link: https://lore.kernel.org/r/20250618222130.672621-4-dan.j.williams@intel.com
+    Signed-off-by: Alison Schofield <alison.schofield@intel.com>
+
+Signed-off-by: Jeff Moyer <jmoyer@redhat.com>
+
+diff --git a/test/dax.sh b/test/dax.sh
+index 3ffbc80..2eec7a6 100755
+--- a/test/dax.sh
++++ b/test/dax.sh
+@@ -43,7 +43,7 @@ run_test() {
+ 			fi
+ 		fi
+ 		count=$((count + 1))
+-	done < <(trace-cmd report | awk '{ print $21 }')
++	done < <(trace-cmd report | grep dax_pmd_fault_done | awk '{ print $NF }')
+ 
+ 	if [ $count -lt 10 ]; then
+ 		cleanup "$1"
