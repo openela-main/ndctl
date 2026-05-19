@@ -1,11 +1,10 @@
 Name:		ndctl
-Version:	80
-Release:	4%{?dist}
+Version:	82
+Release:	2%{?dist}
 Summary:	Manage "libnvdimm" subsystem devices (Non-volatile Memory)
 License:	GPL-2.0-only and LGPL-2.1-only and CC0-1.0 and MIT
 Url:		https://github.com/pmem/ndctl
 Source0:	https://github.com/pmem/%{name}/archive/v%{version}.tar.gz#/%{name}-%{version}.tar.gz
-Patch0:		def79df-ndctl-list-display-region-caps-for-any-of-BTT-PFN-DAX.patch
 
 Requires:	ndctl-libs%{?_isa} = %{version}-%{release}
 Requires:	daxctl-libs%{?_isa} = %{version}-%{release}
@@ -244,6 +243,14 @@ fi
 
 
 %changelog
+* Tue Aug 26 2025 Jeff Moyer <jmoyer@redhat.com> - 82-2
+- bump release for rebuild to re-run tests.
+- Related: RHEL-99217
+
+* Tue Aug 26 2025 Jeff Moyer <jmoyer@redhat.com> - 82-1
+- Rebase to upstream v82
+- Resolves: RHEL-99217
+
 * Tue Jul 22 2025 Jeff Moyer <jmoyer@redhat.com> - 80-4
 - Fix listing of region capabilities (Jeff Moyer)
 - Remove orphaned patch file (Jeff Moyer)
